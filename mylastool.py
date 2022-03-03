@@ -1,9 +1,11 @@
 import os
 import azure.storage.blob
 
-def get_container():
-    URL = os.environ['CONTAINER_URL']
-    return azure.storage.blob.ContainerClient.from_container_url(URL)
+def get_container_url():
+    return os.environ['CONTAINER_URL']
+
+def get_container_from_url(url):
+    return azure.storage.blob.ContainerClient.from_container_url(url)
 
 def get_list_of_lasfiles(container):
     files = []
