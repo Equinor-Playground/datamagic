@@ -23,4 +23,4 @@ def main():
     print_list_of_lasfiles(container)
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main(sys.argv))
