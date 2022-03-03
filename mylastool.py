@@ -69,6 +69,22 @@ def print_data_section(lines):
     for line in get_data_section(lines):
         print(line)
 
+def get_curve_mnemonics(lines):
+    """Return list of curve mnemonics."""
+    startidx = find_section_index(lines, "~C")
+    endidx = find_section_index(lines[startidx+1:], "~")
+    mnemonics = []
+    for line in lines[startidx+1:startidx+1+endidx]:
+        if line.startswith('#'):
+            continue
+        (mnem, *_) = line.split('.')
+        mnemonics.append(mnem.strip())
+    return mnemonics
+
+def print_curve_mnemonics(lines):
+    """Print the curve mnemonics."""
+    print(*get_curve_mnemonics(lines))
+
 
 def print_helpmessage():
     """Print help message."""
@@ -77,6 +93,7 @@ def print_helpmessage():
     print("    python mylastool.py list")
     print("    python mylastool.py header A/B/C.LAS")
     print("    python mylastool.py data   A/B/C.LAS")
+    print("    python mylastool.py curves A/B/C.LAS")
     print("also, remember to set CONTAINER_URL")
 
 
@@ -88,7 +105,7 @@ def main(argv):
 
     command = argv[1]
 
-    if command not in ('list', 'header', 'data'):
+    if command not in ('list', 'header', 'data', 'curves'):
         print('error: unknown command')
         print_helpmessage()
         return 1
@@ -113,6 +130,10 @@ def main(argv):
 
     if command == 'data':
         print_data_section(lines)
+        return 0
+
+    if command == 'curves':
+        print_curve_mnemonics(lines)
         return 0
 
     print('Huh?')
