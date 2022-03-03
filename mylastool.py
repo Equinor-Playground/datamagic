@@ -1,4 +1,5 @@
 import os
+import sys
 import azure.storage.blob
 
 def get_container_url():
@@ -18,9 +19,75 @@ def print_list_of_lasfiles(container):
     for name in get_list_of_lasfiles(container):
         print(name)
 
-def main():
-    container = get_container()
-    print_list_of_lasfiles(container)
+def read_lasfile(container, filename):
+    if not filename.endswith('.LAS'):
+        raise OSError("Probably not a LAS file")
+    blob_client = container.get_blob_client(filename)
+    data = blob_client.download_blob().content_as_bytes()
+    lines = []
+    for line in data.splitlines():
+        lines.append(line.decode("ascii", errors='ignore'))
+    return lines
+
+def find_section_index(lines, prefix):
+    idx = 0
+    for line in lines:
+        if line.startswith(prefix):
+            break
+        idx += 1
+    return idx
+
+def get_header_section(lines):
+    return lines[:find_section_index(lines, '~A')]
+
+def get_data_section(lines):
+    return lines[find_section_index(lines, '~A')+1:]
+
+def print_header_section(lines):
+    for line in get_header_section(lines):
+        print(line)
+
+def print_data_section(lines):
+    for line in get_data_section(lines):
+        print(line)
+
+def main(argv):
+
+    if len(argv) < 2:
+        print("error: please give an argument")
+        return 1
+
+    command = argv[1]
+
+    if command not in ('list', 'header', 'data'):
+        print("error: unknown command")
+        return 1
+
+    url = get_container_url()
+    container = get_container_from_url(url)
+
+    if command == 'list':
+        print_list_of_lasfiles(container)
+        return 0
+
+    if len(argv) < 3:
+        print('error: expected a filename')
+        return 1
+
+    lasfile = argv[2]
+    lines = read_lasfile(container, lasfile)
+
+    if command == 'header':
+        print_header_section(lines)
+        return 0
+
+    if command == 'data':
+        print_data_section(lines)
+        return 0
+
+    print('Huh?')
+
+    return 1
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))
